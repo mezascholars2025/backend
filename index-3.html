@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAT Score Gap Calculator | Meza Scholars</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #f0f4fa;
+    color: #0D1B4B;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+
+  .card {
+    background: #ffffff;
+    border: 1px solid #dce6f5;
+    border-radius: 18px;
+    width: 100%;
+    max-width: 580px;
+    box-shadow: 0 4px 32px rgba(13,27,75,0.09);
+    overflow: hidden;
+  }
+
+  .card-header {
+    background: #0D1B4B;
+    padding: 24px 32px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .brand-block { display: flex; flex-direction: column; gap: 2px; }
+  .brand-name { font-size: 15px; font-weight: 700; color: #E8A020; letter-spacing: 0.05em; text-transform: uppercase; }
+  .brand-tagline { font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 0.03em; }
+
+  .lang-toggle {
+    display: flex;
+    background: rgba(255,255,255,0.08);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .lang-btn {
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.4);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+
+  .lang-btn.active { background: #E8A020; color: #0D1B4B; }
+
+  .card-body { padding: 28px 32px; }
+
+  .headline { font-size: 21px; font-weight: 700; color: #0D1B4B; line-height: 1.3; margin-bottom: 6px; }
+  .subline { font-size: 14px; color: #6b7a99; margin-bottom: 24px; line-height: 1.6; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+
+  label { font-size: 11px; font-weight: 700; color: #8a97b5; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  input, select {
+    background: #f5f8ff;
+    border: 1.5px solid #dce6f5;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 15px;
+    color: #0D1B4B;
+    width: 100%;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+    font-family: inherit;
+  }
+
+  input::placeholder { color: #b0bcd4; }
+
+  input:focus, select:focus {
+    outline: none;
+    border-color: #E8A020;
+    box-shadow: 0 0 0 3px rgba(232,160,32,0.12);
+    background: #fff;
+  }
+
+  select { cursor: pointer; }
+
+  .divider { height: 1px; background: #eef2fa; margin: 20px 0; }
+
+  .capture-section { margin-bottom: 4px; }
+  .capture-label-row { display: flex; align-items: center; gap: 7px; margin-bottom: 10px; }
+  .lock-icon { width: 13px; height: 13px; color: #8a97b5; flex-shrink: 0; }
+  .capture-title { font-size: 13px; font-weight: 700; color: #0D1B4B; }
+  .privacy-note { font-size: 11px; color: #b0bcd4; margin-top: 6px; display: flex; align-items: center; gap: 5px; }
+
+  .calc-btn {
+    width: 100%;
+    padding: 14px;
+    background: #E8A020;
+    color: #0D1B4B;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 18px;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    letter-spacing: 0.02em;
+    font-family: inherit;
+    box-shadow: 0 2px 12px rgba(232,160,32,0.25);
+  }
+
+  .calc-btn:hover { background: #d4911a; box-shadow: 0 4px 18px rgba(232,160,32,0.35); }
+  .calc-btn:active { transform: scale(0.99); }
+  .calc-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+  /* LOADING STATE */
+  .loading-state {
+    display: none;
+    margin-top: 24px;
+    padding: 24px;
+    background: #f5f8ff;
+    border-radius: 12px;
+    border: 1.5px solid #dce6f5;
+    text-align: center;
+  }
+
+  .loading-state.visible { display: block; }
+
+  .loader {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #dce6f5;
+    border-top: 3px solid #E8A020;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 12px;
+  }
+
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+  .loading-text { font-size: 14px; color: #0D1B4B; font-weight: 600; margin-bottom: 4px; }
+  .loading-sub { font-size: 12px; color: #8a97b5; }
+
+  /* RESULTS */
+  .results { display: none; }
+  .results.visible { display: block; }
+
+  .results-divider { height: 3px; background: linear-gradient(90deg, #0D1B4B, #E8A020); margin: 24px 0 20px; border-radius: 99px; }
+  .results-header { font-size: 11px; font-weight: 700; color: #E8A020; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; }
+
+  .bar-section { margin-bottom: 20px; }
+  .bar-label-row { display: flex; justify-content: space-between; font-size: 12px; color: #8a97b5; margin-bottom: 8px; font-weight: 600; }
+  .bar-track { background: #eef2fa; border-radius: 99px; height: 10px; position: relative; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 99px; background: #0D1B4B; transition: width 0.8s ease; }
+  .bar-target-marker { position: absolute; top: 0; height: 100%; background: #E8A020; opacity: 0.4; border-radius: 99px; }
+
+  .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 18px; }
+  .metric { background: #f5f8ff; border: 1.5px solid #dce6f5; border-radius: 10px; padding: 14px 12px; text-align: center; }
+  .metric-val { font-size: 24px; font-weight: 700; color: #0D1B4B; line-height: 1; margin-bottom: 4px; }
+  .metric-val.gold { color: #E8A020; }
+  .metric-lbl { font-size: 11px; color: #8a97b5; line-height: 1.4; }
+
+  /* AI RESPONSE BLOCK */
+  .ai-response {
+    background: linear-gradient(135deg, #f5f8ff 0%, #eef2fa 100%);
+    border: 1.5px solid #dce6f5;
+    border-left: 4px solid #E8A020;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 18px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #2d3a5e;
+  }
+
+  .ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #E8A020;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+    padding: 4px 10px;
+    background: rgba(232,160,32,0.1);
+    border-radius: 99px;
+    border: 1px solid rgba(232,160,32,0.25);
+  }
+
+  .ai-response h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0D1B4B;
+    margin: 16px 0 8px;
+  }
+
+  .ai-response h3:first-of-type { margin-top: 0; }
+
+  .ai-response p { margin-bottom: 10px; }
+  .ai-response ul, .ai-response ol { margin: 8px 0 12px 20px; }
+  .ai-response li { margin-bottom: 6px; }
+  .ai-response strong { color: #0D1B4B; font-weight: 700; }
+
+  .cta-box { background: #0D1B4B; border-radius: 12px; padding: 20px; text-align: center; }
+  .cta-box p { font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 14px; line-height: 1.6; }
+  .cta-box strong { color: #E8A020; }
+
+  .cta-link {
+    display: inline-block;
+    background: #E8A020;
+    color: #0D1B4B;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 11px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background 0.2s;
+    font-family: inherit;
+  }
+
+  .cta-link:hover { background: #d4911a; }
+
+  .signature {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+  }
+
+  .signature strong { color: #E8A020; display: block; margin-bottom: 2px; font-size: 13px; }
+
+  @media (max-width: 480px) {
+    .card-body { padding: 22px 18px; }
+    .card-header { padding: 18px 18px 16px; }
+    .form-row { grid-template-columns: 1fr; }
+    .headline { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="card-header">
+    <div class="brand-block">
+      <span class="brand-name">Meza Scholars</span>
+      <span class="brand-tagline">SAT Tutoring · South Florida</span>
+    </div>
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('es')">ES</button>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <h1 class="headline" id="t-headline">Is Your Child Within 100 Points of a $22,000 Bright Futures Scholarship?</h1>
+    <p class="subline" id="t-subline">Enter their info below and Sebastian's AI will build you a personalized plan — instantly.</p>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label id="t-current">Current SAT Score</label>
+        <input type="number" id="current-score" min="400" max="1600" step="10" placeholder="e.g. 1150">
+      </div>
+      <div class="form-group">
+        <label id="t-target-label">Scholarship Target</label>
+        <select id="target-select">
+          <option value="1190">Florida Medallion (1190)</option>
+          <option value="1330">Florida Academic (1330)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label id="t-weeks">Weeks Until Test</label>
+        <input type="number" id="weeks" min="1" max="52" placeholder="e.g. 8">
+      </div>
+      <div class="form-group">
+        <label id="t-hrs">Study Hrs / Week</label>
+        <input type="number" id="hrs" min="1" max="40" placeholder="e.g. 5">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="capture-section">
+      <div class="capture-label-row">
+        <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        <span class="capture-title" id="t-capture-title">Send My Free Personalized Plan</span>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label id="t-name-label">Your Name</label>
+          <input type="text" id="parent-name" placeholder="e.g. Maria">
+        </div>
+        <div class="form-group">
+          <label id="t-email-label">Email Address</label>
+          <input type="email" id="parent-email" placeholder="your@email.com">
+        </div>
+      </div>
+
+      <div class="privacy-note" id="t-privacy">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>No spam. Just your results + next steps from Sebastian.</span>
+      </div>
+    </div>
+
+    <button class="calc-btn" id="calc-btn" onclick="handleSubmit()">
+      <span id="btn-text">Build My Free Plan →</span>
+    </button>
+
+    <!-- LOADING -->
+    <div class="loading-state" id="loading-state">
+      <div class="loader"></div>
+      <div class="loading-text" id="t-loading-text">Building your personalized plan...</div>
+      <div class="loading-sub" id="t-loading-sub">Sebastian's AI is analyzing your situation. Takes ~10 seconds.</div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="results" id="results">
+      <div class="results-divider"></div>
+      <div class="results-header" id="t-results-header">Your Personalized Plan</div>
+
+      <div class="bar-section">
+        <div class="bar-label-row">
+          <span id="bar-current-label">Current Score</span>
+          <span id="bar-target-label">Target Score</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-target-marker" id="bar-target"></div>
+          <div class="bar-fill" id="bar-current"></div>
+        </div>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric">
+          <div class="metric-val gold" id="m-gap">—</div>
+          <div class="metric-lbl" id="t-m-gap">Points Needed</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val" id="m-questions">—</div>
+          <div class="metric-lbl" id="t-m-questions">Extra Correct Answers</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val" id="m-hours">—</div>
+          <div class="metric-lbl" id="t-m-hours">Total Study Hours</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val" id="m-scholarship">$22,000</div>
+          <div class="metric-lbl" id="t-m-scholarship">Scholarship at Stake</div>
+        </div>
+      </div>
+
+      <div class="ai-response" id="ai-response">
+        <span class="ai-badge">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
+          Personalized for you
+        </span>
+        <div id="ai-content"></div>
+      </div>
+
+      <div class="cta-box">
+        <p id="t-cta-body">Want me to personally review your child's score report and build the <strong>exact week-by-week plan</strong>?</p>
+        <a href="https://calendly.com/mezascholars2025/meza-scholars-free-consultation" target="_blank" class="cta-link" id="t-cta-btn">Book a Free 15-Min Call →</a>
+        <div class="signature">
+          <strong>Sebastian Meza</strong>
+          <span id="t-signature">UCF Industrial Engineering · SAT 1490 · $30,000 Provost Scholar<br>Helping South Florida families ease the cost of college through Bright Futures.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// REPLACE THIS with your Vercel function URL after deploying
+const API_ENDPOINT = 'https://backend-omega-sepia-99.vercel.app/api/generate-plan';
+const FORMSPREE_ID = 'xaqakqlr';
+
+const copy = {
+  en: {
+    headline: "Is Your Child Within 100 Points of a $22,000 Bright Futures Scholarship?",
+    subline: "Enter their info below and Sebastian's AI will build you a personalized plan — instantly.",
+    current: "Current SAT Score",
+    targetLabel: "Scholarship Target",
+    weeks: "Weeks Until Test",
+    hrs: "Study Hrs / Week",
+    captureTitle: "Send My Free Personalized Plan",
+    nameLabel: "Your Name",
+    emailLabel: "Email Address",
+    privacy: "No spam. Just your results + next steps from Sebastian.",
+    btn: "Build My Free Plan →",
+    loadingText: "Building your personalized plan...",
+    loadingSub: "Sebastian's AI is analyzing your situation. Takes ~10 seconds.",
+    resultsHeader: "Your Personalized Plan",
+    barCurrentLabel: "Current Score",
+    barTargetLabel: "Target Score",
+    mGap: "Points Needed",
+    mQuestions: "Extra Correct Answers",
+    mHours: "Total Study Hours",
+    mScholarship: "Scholarship at Stake",
+    ctaBody: "Want me to personally review your child's score report and build the <strong>exact week-by-week plan</strong>?",
+    ctaBtn: "Book a Free 15-Min Call →",
+    signature: "UCF Industrial Engineering · SAT 1490 · $30,000 Provost Scholar<br>Helping South Florida families ease the cost of college through Bright Futures.",
+    medallion: "Florida Medallion (1190)",
+    academic: "Florida Academic (1330)",
+    fallback: "<h3>Here's what your situation looks like</h3><p>Based on your numbers, you're in a position to make real progress. The gap is workable with consistent study, but the key is studying the right things — not just studying more.</p><h3>Where to focus first</h3><p>Most students at this score level lose the majority of their points in just 2-3 specific topic areas. Without knowing which ones those are for your child, generic 'practice more' advice won't move the needle. The fastest path forward is identifying those specific weak spots and attacking them first.</p><h3>What to do this week</h3><p>Have your child take a full timed practice test from the College Board's official materials. Track every wrong answer by topic. That's your starting map. From there, the path becomes clear.</p>",
+    alerts: { score: "Please enter a valid SAT score (400–1600).", email: "Please enter a valid email address.", name: "Please enter your name.", weeks: "Please enter weeks until the test.", hrs: "Please enter study hours per week." }
+  },
+  es: {
+    headline: "¿Está tu hijo/a a 100 puntos de una Beca Bright Futures de $22,000?",
+    subline: "Ingresa su información y la IA de Sebastian creará un plan personalizado — al instante.",
+    current: "Puntaje SAT Actual",
+    targetLabel: "Meta de Beca",
+    weeks: "Semanas Hasta el Examen",
+    hrs: "Horas de Estudio / Semana",
+    captureTitle: "Enviar Mi Plan Personalizado Gratis",
+    nameLabel: "Tu Nombre",
+    emailLabel: "Correo Electrónico",
+    privacy: "Sin spam. Solo tus resultados + próximos pasos de Sebastian.",
+    btn: "Crear Mi Plan Gratis →",
+    loadingText: "Creando tu plan personalizado...",
+    loadingSub: "La IA de Sebastian está analizando tu situación. Toma ~10 segundos.",
+    resultsHeader: "Tu Plan Personalizado",
+    barCurrentLabel: "Puntaje Actual",
+    barTargetLabel: "Puntaje Objetivo",
+    mGap: "Puntos Necesarios",
+    mQuestions: "Respuestas Extra Correctas",
+    mHours: "Horas Totales de Estudio",
+    mScholarship: "Beca en Juego",
+    ctaBody: "¿Quieres que revise personalmente el reporte de tu hijo/a y cree el <strong>plan exacto semana a semana</strong>?",
+    ctaBtn: "Reserva una Llamada Gratis de 15 Min →",
+    signature: "Ingeniería Industrial UCF · SAT 1490 · Beca Provost de $30,000<br>Ayudando a familias del Sur de Florida a aliviar el costo de la universidad con Bright Futures.",
+    medallion: "Medallón de Florida (1190)",
+    academic: "Académica de Florida (1330)",
+    fallback: "<h3>Aquí está tu situación</h3><p>Según tus números, estás en posición de hacer un progreso real. La brecha es alcanzable con estudio constante, pero la clave es estudiar las cosas correctas — no solo estudiar más.</p><h3>Dónde enfocarte primero</h3><p>La mayoría de estudiantes en este nivel pierden la mayoría de sus puntos en solo 2-3 áreas específicas. Sin saber cuáles son esas áreas para tu hijo/a, el consejo genérico de 'practicar más' no va a mover la aguja. El camino más rápido es identificar esos puntos débiles y atacarlos primero.</p><h3>Qué hacer esta semana</h3><p>Haz que tu hijo/a tome un examen de práctica completo cronometrado del College Board. Anota cada respuesta incorrecta por tema. Ese es tu mapa de inicio. Desde ahí, el camino se vuelve claro.</p>",
+    alerts: { score: "Por favor ingresa un puntaje SAT válido (400–1600).", email: "Por favor ingresa un correo electrónico válido.", name: "Por favor ingresa tu nombre.", weeks: "Por favor ingresa las semanas hasta el examen.", hrs: "Por favor ingresa las horas de estudio por semana." }
+  }
+};
+
+let lang = 'en';
+
+function setLang(l) {
+  lang = l;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent === l.toUpperCase()));
+  const c = copy[l];
+  document.getElementById('t-headline').textContent = c.headline;
+  document.getElementById('t-subline').textContent = c.subline;
+  document.getElementById('t-current').textContent = c.current;
+  document.getElementById('t-target-label').textContent = c.targetLabel;
+  document.getElementById('t-weeks').textContent = c.weeks;
+  document.getElementById('t-hrs').textContent = c.hrs;
+  document.getElementById('t-capture-title').textContent = c.captureTitle;
+  document.getElementById('t-name-label').textContent = c.nameLabel;
+  document.getElementById('t-email-label').textContent = c.emailLabel;
+  document.querySelector('#t-privacy span').textContent = c.privacy;
+  document.getElementById('btn-text').textContent = c.btn;
+  document.getElementById('t-loading-text').textContent = c.loadingText;
+  document.getElementById('t-loading-sub').textContent = c.loadingSub;
+  document.getElementById('t-results-header').textContent = c.resultsHeader;
+  document.getElementById('bar-current-label').textContent = c.barCurrentLabel;
+  document.getElementById('bar-target-label').textContent = c.barTargetLabel;
+  document.getElementById('t-m-gap').textContent = c.mGap;
+  document.getElementById('t-m-questions').textContent = c.mQuestions;
+  document.getElementById('t-m-hours').textContent = c.mHours;
+  document.getElementById('t-m-scholarship').textContent = c.mScholarship;
+  document.getElementById('t-cta-body').innerHTML = c.ctaBody;
+  document.getElementById('t-cta-btn').textContent = c.ctaBtn;
+  document.getElementById('t-signature').innerHTML = c.signature;
+  const sel = document.getElementById('target-select');
+  sel.options[0].text = c.medallion;
+  sel.options[1].text = c.academic;
+}
+
+async function handleSubmit() {
+  const cur = parseInt(document.getElementById('current-score').value);
+  const name = document.getElementById('parent-name').value.trim();
+  const email = document.getElementById('parent-email').value.trim();
+  const weeks = parseInt(document.getElementById('weeks').value);
+  const hrs = parseInt(document.getElementById('hrs').value);
+  const a = copy[lang].alerts;
+
+  if (!cur || cur < 400 || cur > 1600) { alert(a.score); return; }
+  if (!name) { alert(a.name); return; }
+  if (!email || !email.includes('@')) { alert(a.email); return; }
+  if (!weeks || weeks < 1) { alert(a.weeks); return; }
+  if (!hrs || hrs < 1) { alert(a.hrs); return; }
+
+  const target = parseInt(document.getElementById('target-select').value);
+  const gap = Math.max(0, target - cur);
+  const scholarship = target === 1330 ? '$22,000' : '$18,000';
+  const questions = Math.round(gap / 12.5);
+  const totalHrs = weeks * hrs;
+
+  const btn = document.getElementById('calc-btn');
+  const loading = document.getElementById('loading-state');
+  btn.disabled = true;
+  btn.style.display = 'none';
+  loading.classList.add('visible');
+
+  // Send lead to Formspree (don't await — fire and forget)
+  fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({
+      parent_name: name,
+      email: email,
+      current_score: cur,
+      target_score: target,
+      points_needed: gap,
+      extra_questions_needed: questions,
+      weeks_until_test: weeks,
+      study_hours_per_week: hrs,
+      total_study_hours: totalHrs,
+      scholarship_value: scholarship,
+      language: lang === 'en' ? 'English' : 'Spanish',
+      _replyto: email,
+      _subject: `🎓 New Lead: ${name} — Score ${cur} → ${target} | Meza Scholars`
+    })
+  }).catch(() => {});
+
+  // Get AI-personalized response
+  let aiContent = copy[lang].fallback;
+  try {
+    const res = await fetch(API_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        parentName: name,
+        currentScore: cur,
+        targetScore: target,
+        weeksUntilTest: weeks,
+        hoursPerWeek: hrs,
+        scholarship: scholarship,
+        language: lang
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.html) aiContent = data.html;
+    }
+  } catch (e) {
+    console.log('Using fallback content');
+  }
+
+  // Render results
+  const curPct = Math.round(((cur - 400) / 1200) * 100);
+  const tgtPct = Math.round(((target - 400) / 1200) * 100);
+  document.getElementById('bar-current').style.width = curPct + '%';
+  document.getElementById('bar-target').style.width = tgtPct + '%';
+  document.getElementById('m-gap').textContent = gap > 0 ? '+' + gap : '✓ Goal';
+  document.getElementById('m-questions').textContent = '~' + questions;
+  document.getElementById('m-hours').textContent = totalHrs;
+  document.getElementById('m-scholarship').textContent = scholarship;
+  document.getElementById('ai-content').innerHTML = aiContent;
+
+  loading.classList.remove('visible');
+  document.getElementById('results').classList.add('visible');
+  setTimeout(() => document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+</script>
+</body>
+</html>
