@@ -1,0 +1,6 @@
+{
+  "name": "meza-scholars-api",
+  "version": "1.0.0",
+  "description": "Backend API for Meza Scholars SAT calculator",
+  "type": "module"
+}
